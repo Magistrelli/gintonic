@@ -8,7 +8,7 @@ Co-developer: [Marco Antonelli](https://orcid.org/0000-0002-5470-4308) - antonel
 The code integrates the Gross-Pitaevskii equation (GPE) to simulate the dynamics of a superfluid made of spinless particles and immersed in an external background potential.
 A set of Quasi-Periodic Boundary Conditions (QPBC) is employed to study the bulk properties of the superfluid, allowing for systems with non-zero net vorticity to be represented on a torus.
 
-Reference paper (ref [1] in the code): [***TODO*** link to the paper](link)
+Reference paper (ref [1] in the code): ''Dynamics of quantized vortices under quasi-periodic boundary conditions'' [arXiv:2509.15298](https://arxiv.org/abs/2509.15298)
 
 
 
