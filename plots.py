@@ -17,12 +17,28 @@ matplotlib.rcParams.update({'font.size': 22})
 
 HBAR = 6.58212e-22      # Planck reduced constant in units of Mev s
 PMASS = 1.87913e3       # 2.*neutron_mass*c^2 in units of Mev
-C_LIGHT = 2.99792e10    # speed of light in units of cm/s
+C_LIGHT = 2.99792e23    # speed of light in units of fm/s
 
 std_figsize = [20, 9]                   # default size of the figures
 figsize = std_figsize                   # default size of the figures
 plt.rcParams.update({'font.size': 18})  # default size of writings
 splot_stc = [1, 2]                      # default suplot structure
+
+# plot units (dafault code units)
+UNITS = {
+    "L": 1.,
+    "t": 1.,
+    "dens": 1.,
+    "vel": 1.,
+    "psi": 1.,
+}
+UNITS_LAB = {
+    "L": "",
+    "t": "",
+    "dens": "",
+    "vel": "",
+    "psi": "",
+}
 
 
 def vortScatter():
@@ -55,11 +71,8 @@ def axis_limlab(xlim, ylim):
 
     plt.xlim(xlim)
     plt.ylim(ylim)
-    units = ""
-    if (args.physical_units):
-        units=" [cm]"
-    plt.xlabel("x"+units)
-    plt.ylabel("y"+units)
+    plt.xlabel("x"+UNITS_LAB["L"])
+    plt.ylabel("y"+UNITS_LAB["L"])
 
 
 def plot_common_ops(xlim, ylim):
@@ -178,22 +191,14 @@ def plotPhaseDens(Phase, Dens, time, savename,
         if (ifKelvin): plt.scatter(xCirc, yCirc, s=10, c='white')
     else: plotQPBCField(Phase, "Phase Field")
 
-    units = ""
-    if (args.physical_units):
-        units=" [fm^-2]"
-
     plt.subplot(splot_stc[0], splot_stc[1], 2)
     if (ifQpbc == 0):
-        plotField(Dens, "Superfluid Density"+units,
+        plotField(Dens, "Superfluid Density"+UNITS_LAB["dens"],
                   levels=np.linspace(0, args.nlim, 100))
         if (ifKelvin): plt.scatter(xCirc, yCirc, s=10, c='white')
     else:
-        plotQPBCField(Dens, "Superfluid Density"+units,
+        plotQPBCField(Dens, "Superfluid Density"+UNITS_LAB["dens"],
                       levels=np.linspace(0., args.nlim, 100))
-
-    units = ""
-    if (args.physical_units):
-        units=" s"
 
     if ((it_cs >= 0) and (initWithVortices)):
         with open( os.path.join(
@@ -209,7 +214,7 @@ def plotPhaseDens(Phase, Dens, time, savename,
         xvort = L1 * (c2/np.pi - Nv) / (2.*Nv)
         plt.scatter(xvort, yvort, s=10, c='black')
 
-    plt.suptitle("t = " + str("%.2e" % (time)) + units)
+    plt.suptitle("t = " + str("%.2e" % (time)) + UNITS_LAB["t"])
     plt.subplots_adjust(right = 1., left = 0.05, wspace=0.2, hspace=0.5)
     plt.savefig(savename)     # , dpi = 200) for more resolution
     if (ifShow == 1):
@@ -237,19 +242,15 @@ def plotCs(fnumber):
         c2 = [float(x) for x in lines[1].split()]
     fig = plt.figure(figsize=std_figsize)
 
-    units = ""
-    if (args.physical_units):
-        units=" [cm]"
-
     plt.subplot(2, 1, 1)
     plt.plot(Y, c1, marker='.')
-    plt.xlabel("y"+units)
-    plt.ylabel("c1 (y)"+units)
+    plt.xlabel("y"+UNITS_LAB["L"])
+    plt.ylabel("c1 (y)"+UNITS_LAB["L"])
 
     plt.subplot(2, 1, 2)
     plt.plot(X, c2, marker='.')
-    plt.xlabel("x"+units)
-    plt.ylabel("c2 (x)"+units)
+    plt.xlabel("x"+UNITS_LAB["L"])
+    plt.ylabel("c2 (x)"+UNITS_LAB["L"])
 
     plt.subplots_adjust(right = 0.95, left = 0.05, wspace=0.2, hspace=0.5)
     try:
@@ -275,10 +276,7 @@ def plot_f_of_t(time, cons, label, title, res=-1):
 
     plt.plot(time, cons)
     plt.title(title)
-    units = ""
-    if (args.physical_units):
-        units=" [s]"
-    plt.xlabel("t"+units)
+    plt.xlabel("t"+UNITS_LAB["t"])
     plt.ylabel(label)
     if (res > 0):
         cMean = np.mean(cons)
@@ -293,31 +291,31 @@ def plotvBgAndNStdDev(vbg_file, ifShow=False):
     time, vbgx, vbgy, nStdDev = \
             np.genfromtxt(vbg_file, unpack=True)
     vBgMod = np.sqrt(vbgx**2 + vbgy**2)
+    time *= UNITS["t"]
+    vbgx *= UNITS["vel"]
+    vbgy *= UNITS["vel"]
+    nStdDev *= UNITS["dens"]
 
     fig = plt.figure(figsize=(20, 20))
     plt.plot(vBgMod, nStdDev)
     plt.title("nStdDev")
-    units_v, units_n = "", ""
-    if (args.physical_units):
-        units_v=" [fm/s]"
-        units_n=" [1/fm]"
-    plt.xlabel("|vBg|"+units_v)
-    plt.ylabel("nStdDev"+units_n)
+    plt.xlabel("|vBg|"+UNITS_LAB["vel"])
+    plt.ylabel("nStdDev"+UNITS_LAB["dens"])
     plt.savefig(os.path.join(args.output, "vBgVsNStdDev.jpg"))
     if ifShow: plt.show()
     plt.close(fig)
 
     fig = plt.figure(figsize=(20, 20))
     plt.subplot(1, 2, 1)
-    plot_f_of_t(time, vbgx, "vBg_x(t)", "")
+    plot_f_of_t(time, vbgx, "vBg_x(t)"+UNITS_LAB["vel"], "")
     plt.subplot(1, 2, 2)
-    plot_f_of_t(time, vbgy, "vBg_x(t)", "")
+    plot_f_of_t(time, vbgy, "vBg_x(t)"+UNITS_LAB["vel"], "")
     plt.savefig(os.path.join(args.output, "vbg_t.jpg"))
     plt.close(fig)
 
 
 def plot_screenshot(args_screenshot):
-    i, fig, nfiles_burn, ifKelvin, if_physical_units, \
+    i, fig, nfiles_burn, ifKelvin, \
             lenx, leny, dtout, if_cs, fracCellOut, \
             if_potential, if_particles, vxBg, vyBg, minPin, \
             maxPin, L1, L2, Pin = args_screenshot
@@ -331,20 +329,11 @@ def plot_screenshot(args_screenshot):
             idx = i + nfiles_burn + 1
         try:
             x, y, dens, phase, velx, vely = \
-                    np.genfromtxt( os.path.join(args.input,
-                                        "phase_"+idname+str(i+1)+".out"),
-                                    skip_header=3, unpack=True,
-                                    usecols=(0, 1, 2, 3, 4, 5) )
+                    read_phase_file( os.path.join(args.input,
+                                        "phase_"+idname+str(i+1)+".out") )
         except: continue
-        if (ifKelvin):
-            xCirc, yCirc = \
-                    np.genfromtxt( os.path.join(
-                            args.input, "Kelvin_"+idname+str(i+1)+".out"),
-                            unpack=True )
-            if (if_physical_units):
-                xCirc *= CSI
-                yCirc *= CSI
-        else: xCirc, yCirc = None, None
+        xCirc, yCirc = read_kelvin(
+                os.path.join(args.input, "Kelvin_"+idname+str(i+1)+".out"), ifKelvin )
         Phase = np.transpose(np.reshape(phase, (lenx, leny)))
         Dens = np.transpose(np.reshape(dens, (lenx, leny)))
         Velx = np.transpose(np.reshape(velx, (lenx, leny)))
@@ -362,9 +351,8 @@ def plot_screenshot(args_screenshot):
         if if_potential:
             if ((if_particles) or
                     ((vxBg**2+vyBg**2 != 0.) and (minPin != maxPin))):
-                x, y, pin = np.genfromtxt( os.path.join(
-                                args.input, "pin_"+idname+str(i+1)+".out"),
-                            skip_header=1, unpack=True )
+                read_potential( os.path.join(
+                            args.input, "pin_"+idname+str(i+1)+".out") )
                 Pin = np.transpose(np.reshape(pin, (lenx, leny)))
                 fig = plt.figure(figsize=(figsize[0]*L1/L2*0.5, figsize[1]*0.5))
                 if (minPin != maxPin):
@@ -373,6 +361,48 @@ def plot_screenshot(args_screenshot):
                 else: plotField(Pin, "Pinning Potential [MeV]", ifvel=0)
                 plt.savefig(os.path.join(args.output, f"pinning_{idx:04d}.jpg"))
                 plt.close(fig)
+
+
+def read_phase_file(input_file):
+    x, y, dens, phase, velx, vely = \
+                np.genfromtxt( input_file,
+                      skip_header=3, unpack=True, usecols=(0, 1, 2, 3, 4, 5) )
+    x *= UNITS["L"]
+    y *= UNITS["L"]
+    dens *= UNITS["dens"]
+    velx *= UNITS["vel"]
+    vely *= UNITS["vel"]
+    return x, y, dens, phase, velx, vely
+
+
+def read_phasePbc_file(input_file):
+    x, y, dens, phase, r, i, velx, vely = \
+                np.genfromtxt( input_file, skip_header=1, unpack=True )
+    x *= UNITS["L"]
+    y *= UNITS["L"]
+    dens *= UNITS["dens"]
+    r *= UNITS["psi"]
+    i *= UNITS["psi"]
+    velx *= UNITS["vel"]
+    vely *= UNITS["vel"]
+    return x, y, dens, phase, r, i, velx, vely
+
+
+def read_potential(input_file):
+    x, y, pin = np.genfromtxt( input_file, skip_header=1, unpack=True )
+    x *= UNITS["L"]
+    y *= UNITS["L"]
+    return x, y, pin
+
+
+def read_kelvin(input_file, ifKelvin):
+    if (ifKelvin):
+        x, y = np.genfromtxt( input_file, unpack=True )
+        x *= UNITS["L"]
+        y *= UNITS["L"]
+    else: x, y = None, None
+
+    return x, y
 
 
 if __name__ == '__main__':
@@ -395,7 +425,7 @@ if __name__ == '__main__':
                         help='plots in physical units')
     parser.add_argument('--show', action='store_true',
                         help='show (some) plots during production')
-    parser.add_argument('-p', '--nprocs', type=int, default=20,
+    parser.add_argument('-p', '--nprocs', type=int, default=1,
                         help='Number of processes')
     args = parser.parse_args()
 
@@ -455,15 +485,33 @@ if __name__ == '__main__':
         figsize = [20,16]
     else: figsize[0] *= L1/L2
 
+    # define plot units
+    if (args.physical_units):
+        UNITS["L"] = CSI
+        UNITS["t"] = T0
+        UNITS["dens"] = 1./CSI**2
+        UNITS["vel"] = CSI/T0
+        UNITS["psi"] = 1./CSI
+        UNITS_LAB["L"] = " [fm]"
+        UNITS_LAB["t"] = " [s]"
+        UNITS_LAB["dens"] = " [fm^-2]"
+        UNITS_LAB["vel"] = " [fm/s]"
+        UNITS_LAB["psi"] = " [fm^-1]"
+
+    # plot units
+    nbulk *= UNITS["dens"]
+    vxBg *= UNITS["vel"]
+    vyBg *= UNITS["vel"]
+    L1 *= UNITS["L"]
+    L2 *= UNITS["L"]
+    tmax *= UNITS["t"]
+    tburn *= UNITS["t"]
+    dt *= UNITS["t"]
+    args.nlim = 1.1 * UNITS["dens"]
+
     # compute the output cell dimensions
     lenx = int(int(lenx*fracCellOut)/outGrid)
     leny = int(int(leny*fracCellOut)/outGrid)
-    # physical units
-    if (args.physical_units):
-        L1 *= CSI
-        L2 *= CSI
-        dt *= T0
-        args.nlim = 1.1e-26/(CSI**2)
     # grid limits
     xlim = (-0.5*L1*fracCellOut, 0.5*L1*fracCellOut)
     ylim = (-0.5*L2*fracCellOut, 0.5*L2*fracCellOut)
@@ -479,10 +527,8 @@ if __name__ == '__main__':
         xv0, yv0, vcharge = np.genfromtxt(
                     os.path.join(args.input, vort_file),
                     skip_header=1, unpack=True)
-        # physical units
-        if (args.physical_units):
-            xv0 *= CSI
-            yv0 *= CSI
+        xv0 *= UNITS["L"]
+        yv0 *= UNITS["L"]
         # compute the total vortices charge
         if (hasattr(vcharge, "__len__")):
             Nv = int(sum(vcharge))  # more vortices
@@ -502,16 +548,9 @@ if __name__ == '__main__':
 
     # read fundamental cell's density, phase and velocity
     x, y, dens, phase, velx, vely = \
-                np.genfromtxt(os.path.join(args.input, "phase_ini.out"),
-                      skip_header=3, unpack=True, usecols=(0, 1, 2, 3, 4, 5))
+                read_phase_file(os.path.join(args.input, "phase_ini.out"))
     # if Kelvin is checked, read the Kelvin circuit
-    if (ifKelvin):
-        xCirc, yCirc = np.genfromtxt(
-                    os.path.join(args.input, "Kelvin_0.out"), unpack=True)
-        if (args.physical_units):
-            xCirc *= CSI
-            yCirc *= CSI
-    else: xCirc, yCirc = None, None
+    xCirc, yCirc = read_kelvin( os.path.join(args.input, "Kelvin_0.out"), ifKelvin )
     # reshape inputs to match a 2D grid
     Dens = np.transpose(np.reshape(dens, (lenx, leny)))
     Phase = np.transpose(np.reshape(phase, (lenx, leny)))
@@ -529,14 +568,10 @@ if __name__ == '__main__':
     plotPhaseDens(Phase, Dens, -ntburn*dt,
                 os.path.join(args.output, "phase_ini.jpg"),
                 ifKelvin=ifKelvin, xCirc=xCirc, yCirc=yCirc, ifShow=args.show)
-
-
     maxPin, minPin, Pin = None, None, None
     if args.potential:
         # read the landscape potential
-        x, y, pin = \
-                np.genfromtxt( os.path.join(args.input, "pin_ini.out"),
-                                skip_header=1, unpack=True )
+        read_potential( os.path.join(args.input, "pin_ini.out") )
         maxPin = max(pin)   # upper limit of the pinning potential (color) axis
         minPin = min(pin)   # lower limit of the pinning potential (color) axis
         # reshape input to match a 2D grid
@@ -560,8 +595,7 @@ if __name__ == '__main__':
     # read n x m fundamental cells' density, phase and velocity in QPBC
     if (fracCellOut == 1.):
         xPbc, yPbc, nPbc, phasePbc, rPbc, iPbc, velxPbc, velyPbc = \
-                np.genfromtxt( os.path.join(args.input, "iniPbc.out"),
-                                skip_header=1, unpack=True )
+                read_phasePbc_file(os.path.join(args.input, "iniPbc.out"))
         # reshape inputs to match a 2D grid
         NPbc = np.transpose(np.reshape(nPbc, (m*lenx, n*leny)))
         PhasePbc = np.transpose(np.reshape(phasePbc, (m*lenx, n*leny)))
@@ -583,17 +617,13 @@ if __name__ == '__main__':
                     ifKelvin=ifKelvin, xCirc=xCirc, yCirc=yCirc,
                     ifQpbc=1, ifShow=args.show)
 
-        units = ""
-        if (args.physical_units):
-            units=" [fm^-1]"
-
         # and Real and Imaginary parts of the wavefunction
         fig = plt.figure(figsize=figsize)
         plt.subplot(splot_stc[0], splot_stc[1], 1)
-        plotQPBCField(RPbc, "Wavefunction's Real Part"+units,
+        plotQPBCField(RPbc, "Wavefunction's Real Part"+UNITS_LAB["psi"],
                       levels=100, ifvel=0)
         plt.subplot(splot_stc[0], splot_stc[1], 2)
-        plotQPBCField(IPbc, "Wavefunction's Imaginary Part"+units,
+        plotQPBCField(IPbc, "Wavefunction's Imaginary Part"+UNITS_LAB["psi"],
                       levels=100, ifvel=0)
         plt.savefig(os.path.join(args.output, "QPBC_IniRI.jpg"))  # , dpi = 200)
         plt.close(fig)
@@ -605,6 +635,7 @@ if __name__ == '__main__':
     t, Ntot, Etot, vxmean, vymean, circ = \
                 np.genfromtxt( os.path.join(args.input, "cons.out"),
                                 skip_header=1, unpack=True )
+    t *= UNITS["t"]
 
     fig = plt.figure(figsize=(20, 20))
 
@@ -649,7 +680,7 @@ if __name__ == '__main__':
         nfiles_burn += 1
       else: break
 
-    args_screenshot = [(i, fig, nfiles_burn, ifKelvin, args.physical_units,
+    args_screenshot = [(i, fig, nfiles_burn, ifKelvin,
                         lenx, leny, dt*ntout, args.cs, fracCellOut,
                         args.potential, ifActivePar, vxBg, vyBg, minPin,
                         maxPin, L1, L2, Pin) for i in range(nchuncks)]
@@ -665,8 +696,7 @@ if __name__ == '__main__':
     if (fracCellOut == 1.):
         # read n x m fundamental cells' density, phase and velocity in QPBC
         xPbc, yPbc, nPbc, phasePbc, rPbc, iPbc, velxPbc, velyPbc = \
-                    np.genfromtxt( os.path.join(args.input, "endPbc.out"),
-                                    skip_header=1, unpack=True )
+                read_phasePbc_file(os.path.join(args.input, "endPbc.out"))
         # reshape inputs to match a 2D grid
         NPbc = np.transpose(np.reshape(nPbc, (m*lenx, n*leny)))
         PhasePbc = np.transpose(np.reshape(phasePbc, (m*lenx, n*leny)))
